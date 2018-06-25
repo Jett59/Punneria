@@ -1,62 +1,42 @@
 package punneria;
-import java.awt.AWTException;
-import java.awt.Color;
-import java.awt.Robot;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt .Graphics;
-import java.awt.Polygon;
-import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import com.alibaba.fastjson.JSON;
+import org.jfugue.pattern.Pattern;
+import org.jfugue.player.Player;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.Timer;
-import javax.swing.WindowConstants;
-import org.jfugue.player.Player;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
-
-import org.jfugue.pattern.Pattern;
 public class PunnPoint extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener{ 
 	PunnSet punnset = new PunnSet();
 	BooleanSaver saver = new BooleanSaver();
 	boolean missionComplete = false;
 	public Boolean settings = false;
 	void modeSave(){
-		saver.saveDay(day);
-		saver.saveNight(night);
-		saver.saveMoon(moon);
-		saver.saveSlug(slug);
-		saver.saveSelector(selector);
-		saver.saveTunnels(tunnels);
-		saver.saveMissionComplete(missionComplete);
-		saver.saveGrass(grass);
-		saver.saveSky(sky);
+		saver.setDay(day);
+		saver.setNight(night);
+		saver.setMoon(moon);
+		saver.setSlug(slug);
+		saver.setSelector(selector);
+		saver.setTunnels(tunnels);
+		saver.setMissionComplete(missionComplete);
+		saver.setGrass(grass);
+		saver.setSky(sky);
 	}
 	void retreveBooleans(){
-		day = saver.retreveDay();
-		night = saver.retreveNight();
-		moon = saver.retreveMoon();
-		slug = saver.retreveSlug();
-		selector = saver.retreveSelector();
-		tunnels = saver.retreveTunnels();
-		missionComplete = saver.retreveMissionComplete();
-		grass = saver.retreveGrass();
-		sky = saver.retreveSky();
+		day = saver.getDay();
+		night = saver.getNight();
+		moon = saver.getMoon();
+		slug = saver.getSlug();
+		selector = saver.getSelector();
+		tunnels = saver.getTunnels();
+		missionComplete = saver.getMissionComplete();
+		grass = saver.getGrass();
+		sky = saver.getSky();
 	}
 	Color no = Color.WHITE;
 	public void setSettings() throws IOException{
@@ -65,7 +45,7 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 		String stats = JSON.toJSONString(punnset);
 		Files.write(Paths.get("stats.json"), stats.getBytes());
 		modeSave();
-		saver.saveDay(day);
+		saver.setDay(day);
 		String modes = JSON.toJSONString(saver);
 		System.out.println(modes);
 		Files.write(Paths.get("progress.json"), modes.getBytes());
@@ -89,15 +69,15 @@ public void setProgress(){
 		byte[] bytes = Files.readAllBytes(Paths.get("progress.json"));
 		String progress = new String(bytes);
 		BooleanSaver deserialised = JSON.parseObject(progress, BooleanSaver.class);
-		day = deserialised.retreveDay();
-		night = deserialised.retreveNight();
-		moon = deserialised.retreveMoon();
-		slug = deserialised.retreveSlug();
-		selector = deserialised.retreveSelector();
-		tunnels = deserialised.retreveTunnels();
-		missionComplete = deserialised.retreveMissionComplete();
-		grass = deserialised.retreveGrass();
-		sky = deserialised.retreveSky();
+		day = deserialised.getDay();
+		night = deserialised.getNight();
+		moon = deserialised.getMoon();
+		slug = deserialised.getSlug();
+		selector = deserialised.getSelector();
+		tunnels = deserialised.getTunnels();
+		missionComplete = deserialised.getMissionComplete();
+		grass = deserialised.getGrass();
+		sky = deserialised.getSky();
 	}catch(Exception e){
 		
 	}
@@ -233,7 +213,7 @@ public void setProgress(){
 		if(night){
 			words = "go up to progress, (use the arrow keys to move)";
 		}
-		sky = new Color(0, 0, sky.getBlue()-3);
+		sky = new Color(0, 0, Math.max(sky.getBlue()-3, 0));
 		this.repaint();
 		if(sky.getBlue()<1){
 			night = true;
