@@ -2,7 +2,7 @@ package punneria;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 public class textBox implements KeyListener{
-public Boolean allowed = true;
+public Boolean allowed = false;
 public String box = "";
 	public textBox() {
  

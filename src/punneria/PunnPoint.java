@@ -14,6 +14,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -25,9 +26,82 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 import javax.swing.WindowConstants;
 import org.jfugue.player.Player;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
 import org.jfugue.pattern.Pattern;
 public class PunnPoint extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener{ 
+	PunnSet punnset = new PunnSet();
+	BooleanSaver saver = new BooleanSaver();
 	boolean missionComplete = false;
+	public Boolean settings = false;
+	void modeSave(){
+		saver.saveDay(day);
+		saver.saveNight(night);
+		saver.saveMoon(moon);
+		saver.saveSlug(slug);
+		saver.saveSelector(selector);
+		saver.saveTunnels(tunnels);
+		saver.saveMissionComplete(missionComplete);
+		saver.saveGrass(grass);
+		saver.saveSky(sky);
+	}
+	void retreveBooleans(){
+		day = saver.retreveDay();
+		night = saver.retreveNight();
+		moon = saver.retreveMoon();
+		slug = saver.retreveSlug();
+		selector = saver.retreveSelector();
+		tunnels = saver.retreveTunnels();
+		missionComplete = saver.retreveMissionComplete();
+		grass = saver.retreveGrass();
+		sky = saver.retreveSky();
+	}
+	Color no = Color.WHITE;
+	public void setSettings() throws IOException{
+			punnset.setTriangle(no);
+			punnset.setAcross(size);
+		String stats = JSON.toJSONString(punnset);
+		Files.write(Paths.get("stats.json"), stats.getBytes());
+		modeSave();
+		saver.saveDay(day);
+		String modes = JSON.toJSONString(saver);
+		System.out.println(modes);
+		Files.write(Paths.get("progress.json"), modes.getBytes());
+	}
+public void setStats() {
+	try{
+	byte[] bytes = Files.readAllBytes(Paths.get("stats.json"));
+	String stats = new String(bytes);
+	PunnSet deSerialised = JSON.parseObject(stats, PunnSet.class);
+	if(deSerialised.getTriangle ()!= null){
+	no = deSerialised.getTriangle();
+	}
+	if (deSerialised.getAcross()!=null){
+		size = deSerialised.getAcross();
+	}
+	}catch(Exception e){
+	}
+}
+public void setProgress(){
+	try{
+		byte[] bytes = Files.readAllBytes(Paths.get("progress.json"));
+		String progress = new String(bytes);
+		BooleanSaver deserialised = JSON.parseObject(progress, BooleanSaver.class);
+		day = deserialised.retreveDay();
+		night = deserialised.retreveNight();
+		moon = deserialised.retreveMoon();
+		slug = deserialised.retreveSlug();
+		selector = deserialised.retreveSelector();
+		tunnels = deserialised.retreveTunnels();
+		missionComplete = deserialised.retreveMissionComplete();
+		grass = deserialised.retreveGrass();
+		sky = deserialised.retreveSky();
+	}catch(Exception e){
+		
+	}
+}
  textBox textbox = new textBox();
  Random rand = new Random();
 	boolean start = false;
@@ -55,21 +129,6 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 	boolean menu = false;
 	String name = ("");
 	static boolean tunnelSave = false;
-	static boolean saveChecked = saveChecker();
-	static boolean saveChecker(){
-		if(tunnelSave == true){
-			try{
-			Files.write(Paths.get("tunnelSave.txt"), Arrays.asList("tunnels have been saved"));
-			}catch(Exception e){
-				
-			}
-			return true;
-		}else{
-			return false;
-		}
-
-	}
-
 	int second = 0;	
 	void mouseMove(int X, int Y){
 		Robot robot;
@@ -134,7 +193,6 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 	int footy = screenSize.height-x;
 	int lavaX = screenSize.width/2+size;
 	int y = 20;
-	Color no = Color.WHITE;
 	static Color sky = new Color(0, 0, 255);
 	static Color grass = new Color(0, 100, 0);
 	{
@@ -176,6 +234,7 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 			words = "go up to progress, (use the arrow keys to move)";
 		}
 		sky = new Color(0, 0, sky.getBlue()-3);
+		this.repaint();
 		if(sky.getBlue()<1){
 			night = true;
 		}
@@ -188,9 +247,9 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 		}
 		if(sky.getRed() < 3){
 		}
-		if(sun > 150){
+		if(sun > footy){
 			times.start();
-		}
+		} 
 	});
 	@Override
 	public synchronized void addMouseMotionListener(MouseMotionListener l) {
@@ -200,30 +259,20 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 		JFrame punn = new JFrame("punneria");
 
 		punn.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		PunnPoint punnpoint = new PunnPoint();
-		punn.getContentPane().add(punnpoint);
-		punn.pack();
-		punn.setVisible(true);
-	}
-	public PunnPoint() {
-		try{
-			List<String> fileMissionComplete = Files.readAllLines(Paths.get("missionCompleteSave.txt"));
-			if(fileMissionComplete != null){
-				day = false;
-				missionComplete = true;
-				grass = new Color(250, 250, 250);
-				sky = new Color(0, 0, 0);
-				try{
-					Files.delete(Paths.get("tunnelSave.txt"));
-				}catch(Exception e){
-					
-				}
-			}
-		}catch(Exception e){
-			
+		PunnPoint punnpoint;
+		try {
+			punnpoint = new PunnPoint();
+			punn.getContentPane().add(punnpoint);
+			punn.pack();
+			punn.setVisible(true);
+		} catch (IOException e){
+			e.printStackTrace();
+			System.out.println("the game has crashed, please try again");
+			System.exit(-1);
 		}
-		
-		tunnels = fileRead("tunnelSave.txt", tunnels, Color.BLACK, new Color(150, 150, 150), "Find the green artifact but beware, orange ground is lava and you will die if you touch it", "");
+	}
+	public PunnPoint() throws IOException {
+		setStats();
 		addKeyListener(this);
 		addKeyListener(textbox);
 		addMouseListener	(this);
@@ -289,7 +338,6 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 		if(selector){
 			if(t.getKeyCode()==KeyEvent.VK_MINUS){
 				size = size-1;
-				textbox.box = "";
 			}
 			if(size < 0){
 				size = 0;
@@ -299,7 +347,6 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 			}
 			if(t.getKeyCode()==KeyEvent.VK_EQUALS){
 				size = size+1;
-				textbox.box = "";
 			}
 		}
 		if(t.getKeyCode () == KeyEvent.VK_UP){
@@ -325,7 +372,22 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 	}
 	@Override
 	public void keyReleased(KeyEvent t) {
-
+		if(t.getKeyCode()==KeyEvent.VK_ESCAPE){
+			if (settings == true) {
+				settings = false;
+				retreveBooleans();
+			} else {
+				modeSave();
+				settings = true;
+				day = false;
+				night = false;
+				moon = false;
+				slug = false;
+				selector = false;
+				tunnels = false;
+				missionComplete = false;
+			}
+		}
 		if(t.getKeyCode ()==KeyEvent.VK_SPACE){
 			time.start();
 		}
@@ -350,23 +412,18 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 		if(selector){
 			if(t.getKeyCode()==KeyEvent.VK_P){
 				size = rand.nextInt(200);
-				textbox.box = "";
 			}
 			if(t.getKeyCode()==KeyEvent.VK_C){
 				no = new Color(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255));
-				textbox.box = "";
 			}
 			if(t.getKeyCode()==KeyEvent.VK_G){
 				no = Color.GREEN;
-				textbox.box = "";
 			}
 			if(t.getKeyCode()==KeyEvent.VK_B){
 				no = Color.BLUE;
-				textbox.box = "";
 			}
 			if(t.getKeyCode()==KeyEvent.VK_R){
 				no = Color.RED;
-				textbox.box = "";
 			}
 		}
 	}
@@ -375,6 +432,8 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 		super.paintComponent(graphics);
 		graphics.setColor(sky);	
 		graphics.fillRect(0,  0,  screenSize.width, screenSize.height);
+		graphics.setColor(Color.BLACK);
+		graphics.drawString("sky colour" + sky, 200, screenSize.height-x-100);
 		if(moon){
 			graphics.setColor(Color.WHITE);
 			graphics.drawString("Call", 15, 25);
@@ -383,9 +442,16 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 		graphics.setColor(new Color(240, 200, 20));
 		if(day){
 			graphics.fillOval(screenSize.width/2-50, sun, 100, 100);
+			graphics.setColor(Color.BLACK);
+			graphics.drawString("the triangle is you", screenSize.width-200, 100);
+			graphics.drawString("press escape to enter settings", screenSize.width-300, 300);
 		}
 		graphics.setColor(no);
 		graphics.fillPolygon(new int[]{footx,screenSize.width/2+size,screenSize.width/2-size}, new int[]{footy,screenSize.height/2,screenSize.height/2}, 3);
+		if(settings){
+			sky = Color.BLACK;
+			grass = Color.BLACK;
+		}
 		graphics.drawString("" + textbox.box + "", screenSize.width/2-100, screenSize.height/2-50);
 		graphics.setColor(grass);
 		graphics.fillRect(0, screenSize.height-x, screenSize.width, screenSize.height);
@@ -425,7 +491,6 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 		}
 		if(lavaX < 1){
 			missionComplete = true;tunnels = false; x = screenSize.height/3; lavaX = screenSize.width/2+size;
-			saveChecked = false;
 		}
 		if(missionComplete){
 			graphics.setColor(new Color(200, 0, 200));
@@ -441,11 +506,6 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 			graphics.setColor(Color.RED);
 			graphics.drawRect(0, 0, 50, 50);
 			graphics.drawString("save", 0, 25);
-		}
-		if(saveChecked == true){
-			graphics.setColor(Color.BLUE);
-			graphics.drawString("saved", 100, 250);
-			System.out.println("saved");
 		}
 	}
 	@Override
@@ -476,34 +536,14 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 					selector = false;
 					words = "find the green artifact but beware, orange ground is lava and you will die if you touch it";
 					mouseMove(25, 40);
-				}
-			}
-		}
-		if(tunnels == true){
-			if(t.getY() < 51){
-				if(t.getX() < 51){
-					if(tunnels != tunnelSave){
-						tunnelSave = true;
-					}else{
-						saveChecked = false;
-
+					try {
+						setSettings();
+					} catch (IOException e) {
+						e.printStackTrace();
 					}
-					saveChecker();
 				}
 			}
 		}
-if(t.getY() < 51){
-	if(t.getX() > screenSize.width-51){
-		if(missionComplete){
-			saveChecked = true;
-			try{
-				Files.write(Paths.get("missionCompleteSave.txt"), Arrays.asList("you have completed the mission!"));
-			} catch(Exception E){
-				
-			}
-		}
-	}
-}
 	}
 	@Override
 	public void mouseEntered(MouseEvent t) {
