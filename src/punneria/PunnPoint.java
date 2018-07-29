@@ -3,19 +3,91 @@ import com.alibaba.fastjson.JSON;
 import org.jfugue.pattern.Pattern;
 import org.jfugue.player.Player;
 
+import javax.accessibility.AccessibleContext;
+import javax.accessibility.AccessibleText;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
 import javax.swing.*;
+import javax.swing.text.AttributeSet;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
-public class PunnPoint extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener{ 
-	PunnSet punnset = new PunnSet();
+public class PunnPoint extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, AccessibleText{ 
+	PunnSet punnset = new PunnSet();	
+	ImageObserver observer = null;
+	static BufferedImage icon = null;
+	void creatIcon(){
+	try{
+icon = ImageIO.read(new File("moon.png"));		
+	}catch(Exception e){
+creatIcon();
+	}
+	}
+	{
+	creatIcon(); 
+	}
+	static BufferedImage image2 = null;
+void creatEarth(){
+	try{
+		image2 = ImageIO.read(new File("earth.png"));
+	}catch(Exception e){
+		creatEarth();
+	}
+}
+{
+	creatEarth();
+}
+static BufferedImage image3 = null;
+void creatSun(){
+	try{
+		image3 = ImageIO.read(new File("sun.png"));
+	}catch(Exception e){
+		creatSun();
+	}
+}
+{
+	creatSun();
+}
+	void drawStar(Graphics graphics, int xL, int yL){
+		graphics.setColor(Color.WHITE);
+		graphics.fillOval(xL-2, yL-2, 4, 4);
+	}
+int missions = 0;
+int missions(Graphics graphics, Boolean a){
+	if(a){
+	if(missions == 1){
+		graphics.setColor(Color.BLUE);
+		return 2;
+	}else if(missions == 2){
+		graphics.setColor(Color.GREEN);
+		return 3;
+	}else if(missions == 3){
+		graphics.setColor(Color.RED);
+		return 4;
+	}else{
+		graphics.setColor(Color.WHITE);
+		return missions+1;
+	}
+	}else{
+		return missions+1;
+	}
+}
+int p$ = 0;
 	BooleanSaver saver = new BooleanSaver();
 	boolean missionComplete = false;
+	Color button = Color.WHITE;
+	Color buttonTwo = Color.WHITE;
 	public Boolean settings = false;
+	public Boolean namer = false;
+	public Boolean ALPHA = false;
 	void modeSave(){
 		saver.setDay(day);
 		saver.setNight(night);
@@ -26,6 +98,8 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 		saver.setMissionComplete(missionComplete);
 		saver.setGrass(grass);
 		saver.setSky(sky);
+		saver.setWords(words);
+		namer = false;
 	}
 	void retreveBooleans(){
 		day = saver.getDay();
@@ -37,17 +111,17 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 		missionComplete = saver.getMissionComplete();
 		grass = saver.getGrass();
 		sky = saver.getSky();
+		words = saver.getWords();
+		namer = false;
 	}
 	Color no = Color.WHITE;
 	public void setSettings() throws IOException{
 			punnset.setTriangle(no);
 			punnset.setAcross(size);
+			punnset.setName(textbox.box);
 		String stats = JSON.toJSONString(punnset);
 		Files.write(Paths.get("stats.json"), stats.getBytes());
-		modeSave();
-		saver.setDay(day);
 		String modes = JSON.toJSONString(saver);
-		System.out.println(modes);
 		Files.write(Paths.get("progress.json"), modes.getBytes());
 	}
 public void setStats() {
@@ -60,6 +134,9 @@ public void setStats() {
 	}
 	if (deSerialised.getAcross()!=null){
 		size = deSerialised.getAcross();
+	}
+	if(deSerialised.getName() != null){
+		textbox.box = deSerialised.getName();
 	}
 	}catch(Exception e){
 	}
@@ -79,12 +156,10 @@ public void setProgress(){
 		grass = deserialised.getGrass();
 		sky = deserialised.getSky();
 	}catch(Exception e){
-		
 	}
 }
  textBox textbox = new textBox();
  Random rand = new Random();
-	boolean start = false;
 	public boolean fileRead(String path, Boolean mode, Color Sky, Color cGrass, String Words, String delete){
 	try{
 		List<String> str = Files.readAllLines(Paths.get(path));
@@ -106,6 +181,10 @@ public void setProgress(){
 	}
 }
 	Font font = new Font("", 0, 20);
+	@Override
+	public AccessibleContext getAccessibleContext(){
+		return super.getAccessibleContext();
+	}
 	boolean menu = false;
 	String name = ("");
 	static boolean tunnelSave = false;
@@ -123,13 +202,12 @@ public void setProgress(){
 	static boolean tunnels = false;
 	int size = 100;
 	final Color orange = new Color(255, 100, 0);
-	static boolean day = true;
+	public boolean start = true;
+	static boolean day = false;
 	static boolean selector = false;
 	static boolean night = false;
-	Pattern bang = new Pattern("dw");
-	boolean bangs = true;
 	boolean moon = false;
-	static String words   = new String("press space to start");
+	public static String words   = new String("press space to start");
 	Player player = new Player();
 	int acl = 0;
 	boolean slug = false;
@@ -159,15 +237,6 @@ public void setProgress(){
 	}
 	Player play = new Player();
 	Polygon poly = new Polygon(new int[]{screenSize.width/2,screenSize.width/2-10,screenSize.width/2+10}, new int[]{screenSize.height/2-10, screenSize.height/2-20, screenSize.height/2+10}, 3);
-	void close(){
-		Robot robot;
-		try{
-			robot = new Robot();
-			//robot.mouseRelease();
-		} catch (AWTException e){
-			e.printStackTrace();
-		}		
-	}
 	int footx = screenSize.width/2;
 	int x = screenSize.height/3;
 	int footy = screenSize.height-x;
@@ -178,8 +247,25 @@ public void setProgress(){
 	{
 		javax.swing.Timer timer = new Timer(10, e -> {
 			this.repaint();
-			if(lavaX == footx){
-				lavaX = screenSize.width/2+100;
+			textbox.allowed = namer;
+			if(start){
+				settings = false;
+			}
+			if(!ALPHA){
+				buttonTwo = Color.WHITE;
+			}else{
+				buttonTwo = new Color(127, 127, 127);
+			}
+			if(namer){
+				button = new Color(125, 125, 125);
+			}else{
+				button = Color.WHITE;
+			}
+			if(slug){
+				grass = new Color(150, 150, 150);
+			}
+			if(lavaX < footx+1 && screenSize.height-x == footy && footx < lavaX+screenSize.width/2-100){
+				System.exit(0);
 			}
 			if(textbox.box == "call" && moon == true){
 				acl = 20;
@@ -189,7 +275,6 @@ public void setProgress(){
 				sky = new Color(200, 100, 0);
 				night = false;
 				acl = 1000;
-				textbox.box = "";
 			}
 			if(night){
 				day = false;
@@ -209,25 +294,33 @@ public void setProgress(){
 		});
 		timer.start();
 	}
+	Timer money = new Timer(10000, e ->{
+		if(missionComplete){
+			p$ = p$+missions(getGraphics(), false);
+		}
+	});
+	{
+		money.start();
+	}
 	Timer times = new Timer(100, e ->{
 		if(night){
 			words = "go up to progress, (use the arrow keys to move)";
 		}
+		if(day){
 		sky = new Color(0, 0, Math.max(sky.getBlue()-3, 0));
-		this.repaint();
-		if(sky.getBlue()<1){
+		}else{
+			sky = new Color(Math.max(sky.getRed(), 5), Math.max(sky.getGreen(), 5), Math.max(sky.getBlue(), 5));
+		}
+		if(sky.getBlue()<6 && day){
 			night = true;
 		}
-
 	}); 
-	Timer time = new Timer(100, e ->{
-		sun = sun+3;
+	Timer time = new Timer(33, e ->{
+		sun = sun+1;
 		if(slug){
 			sky = new Color(sky.getRed()-2, sky.getGreen()-1, 0);
 		}
-		if(sky.getRed() < 3){
-		}
-		if(sun > footy){
+		if(sun > screenSize.height-x-200){
 			times.start();
 		} 
 	});
@@ -237,14 +330,18 @@ public void setProgress(){
 	}
 	public static void main(String[] args){
 		JFrame punn = new JFrame("punneria");
-
 		punn.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		PunnPoint punnpoint;
 		try {
 			punnpoint = new PunnPoint();
+			AccessibleContext accessibleContext = punn.getAccessibleContext();
+			accessibleContext.setAccessibleName("this is a test");
+			accessibleContext.setAccessibleDescription("this is a test");
+			punn.getAccessibleContext();
 			punn.getContentPane().add(punnpoint);
 			punn.pack();
 			punn.setVisible(true);
+			punn.setIconImage(icon);
 		} catch (IOException e){
 			e.printStackTrace();
 			System.out.println("the game has crashed, please try again");
@@ -284,7 +381,7 @@ public void setProgress(){
 	public synchronized void addMouseWheelListener(MouseWheelListener l) {
 		super.addMouseWheelListener(l);
 	}	
-	@Override
+@Override
 	public void keyTyped(KeyEvent t) {
 
 	}
@@ -314,7 +411,6 @@ public void setProgress(){
 	}
 	@Override
 	public void keyPressed(KeyEvent t) {
-
 		if(selector){
 			if(t.getKeyCode()==KeyEvent.VK_MINUS){
 				size = size-1;
@@ -349,16 +445,24 @@ public void setProgress(){
 				lavaRight(screenSize.width/2+100, 3);
 			}
 		}
+		if(ALPHA && settings){
+			if(t.getKeyCode()==KeyEvent.VK_EQUALS){
+				no = new Color(no.getRed(), no.getGreen(), no.getBlue(), no.getAlpha()+1);
+			}else if(t.getKeyCode()==KeyEvent.VK_MINUS){
+				no = new Color(no.getRed(), no.getGreen(), no.getBlue(), no.getAlpha()-1);
+			}
+		}
 	}
 	@Override
 	public void keyReleased(KeyEvent t) {
 		if(t.getKeyCode()==KeyEvent.VK_ESCAPE){
-			if (settings == true) {
+			if (settings){
 				settings = false;
 				retreveBooleans();
 			} else {
 				modeSave();
 				settings = true;
+				namer = false;
 				day = false;
 				night = false;
 				moon = false;
@@ -368,11 +472,26 @@ public void setProgress(){
 				missionComplete = false;
 			}
 		}
-		if(t.getKeyCode ()==KeyEvent.VK_SPACE){
-			time.start();
+		if(settings){
+			if(t.getKeyCode()==KeyEvent.VK_Q){
+				System.out.println("the game successfully closed");
+				System.exit(0);
+			}
+			if(t.getKeyCode()==KeyEvent.VK_N){
+				namer = !namer;	
+			}
+			if(t.getKeyCode()==KeyEvent.VK_S){
+				try {
+					setSettings();
+				} catch (Exception e) {
+				}
+			}
+			if(t.getKeyCode()==KeyEvent.VK_O){
+				ALPHA = !ALPHA;
+			}
 		}
-		if(t.getKeyCode ()==KeyEvent.VK_T){
-			start = !start;
+		if(t.getKeyCode ()==KeyEvent.VK_SPACE && day){
+			time.start();
 		}
 		if(moon){
 			if(t.getKeyCode ()==KeyEvent.VK_C){
@@ -392,9 +511,9 @@ public void setProgress(){
 		if(selector){
 			if(t.getKeyCode()==KeyEvent.VK_P){
 				size = rand.nextInt(200);
-			}
+				}
 			if(t.getKeyCode()==KeyEvent.VK_C){
-				no = new Color(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255));
+				no = new Color(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255), no.getAlpha());
 			}
 			if(t.getKeyCode()==KeyEvent.VK_G){
 				no = Color.GREEN;
@@ -408,20 +527,79 @@ public void setProgress(){
 		}
 	}
 	@Override
+	public String getAfterIndex(int part, int index) {
+		return null;
+	}
+	@Override
+	public String getAtIndex(int part, int index) {
+		return null;
+	}
+	@Override
+	public String getBeforeIndex(int part, int index) {
+		return null;
+	}
+	@Override
+	public int getCaretPosition() {
+		return 0;
+	}
+	@Override
+	public AttributeSet getCharacterAttribute(int i) {
+		return null;
+	}
+	@Override
+	public Rectangle getCharacterBounds(int i) {
+		return null;
+	}
+	@Override
+	public int getCharCount() {
+		return 0;
+	}
+	@Override
+	public int getIndexAtPoint(Point p) {
+		return 0;
+	}
+	@Override
+	public String getSelectedText() {
+		return null;
+	}
+	@Override
+	public int getSelectionEnd() {
+		return 0;
+	}
+	@Override
+	public int getSelectionStart() {
+		return 0;
+	}
+	@Override
 	protected void paintComponent(Graphics graphics){
 		super.paintComponent(graphics);
 		graphics.setColor(sky);	
 		graphics.fillRect(0,  0,  screenSize.width, screenSize.height);
-		graphics.setColor(Color.BLACK);
-		graphics.drawString("sky colour" + sky, 200, screenSize.height-x-100);
+		if(namer){
+			graphics.setColor(Color.WHITE);
+			graphics.drawRect(footx-size-25, screenSize.height/2-65, size*2+50, 30);
+		}
+		if(start){
+			sky = orange;
+			grass = orange;
+			graphics.setColor(Color.BLACK);
+			graphics.drawString("reset", screenSize.width/2-8, 95);
+			graphics.drawRoundRect(screenSize.width/2-45, 85, 100, 25, 50, 50);
+			graphics.drawString("load save", screenSize.width/2-13, 70);
+			graphics.drawRoundRect(screenSize.width/2-45, 60, 100, 25, 50, 50);
+		}
+		if(textbox.box.length() == 53 || textbox.box.length() > 53){
+			textbox.box =  textbox.box.substring(0, textbox.box.length()-1);
+		}
 		if(moon){
 			graphics.setColor(Color.WHITE);
 			graphics.drawString("Call", 15, 25);
 			graphics.drawRect(0, 0, 50, 50);
+			night = false;
 		}
 		graphics.setColor(new Color(240, 200, 20));
 		if(day){
-			graphics.fillOval(screenSize.width/2-50, sun, 100, 100);
+			graphics.drawImage(image3, screenSize.width/2-63, sun, 126, 126, observer);
 			graphics.setColor(Color.BLACK);
 			graphics.drawString("the triangle is you", screenSize.width-200, 100);
 			graphics.drawString("press escape to enter settings", screenSize.width-300, 300);
@@ -429,20 +607,19 @@ public void setProgress(){
 		graphics.setColor(no);
 		graphics.fillPolygon(new int[]{footx,screenSize.width/2+size,screenSize.width/2-size}, new int[]{footy,screenSize.height/2,screenSize.height/2}, 3);
 		if(settings){
-			sky = Color.BLACK;
-			grass = Color.BLACK;
+			sky = new Color(10, 10, 10);
+			grass = new Color(10, 10, 10);
 		}
 		graphics.drawString("" + textbox.box + "", screenSize.width/2-100, screenSize.height/2-50);
 		graphics.setColor(grass);
-		graphics.fillRect(0, screenSize.height-x, screenSize.width, screenSize.height);
-		if(night){
-			graphics.setColor(new Color(50, 50, 50));
-			graphics.fillOval(screenSize.width/2-50, y, 100, 100);
-
+		graphics.fill3DRect(0, screenSize.height-x, screenSize.width, screenSize.height, true);
+		if(night && !settings){
+			graphics.drawImage(icon, screenSize.width/2-63, y, 126, 126, observer);
+			drawStar(graphics, screenSize.width-100, 50);
+			drawStar(graphics, screenSize.width/2+100, 50);
 		}
 		if(moon){
-			graphics.setColor(new Color(0, 100, 0));
-			graphics.fillOval(screenSize.width/2-50, y, 100, 100);
+			graphics.drawImage(image2, screenSize.width/2-50, 20, 100, 100, observer);
 			y = 20;
 		}
 		graphics.drawString("Quest: "+ words +"", 100, 100);
@@ -465,7 +642,7 @@ public void setProgress(){
 			grass = new Color(150, 150, 150);
 			graphics.setColor(no);
 			graphics.setColor(orange);
-			graphics.fillRect(lavaX, screenSize.height-x, screenSize.width/2-size, 50);
+			graphics.fillRect(lavaX, screenSize.height-x, screenSize.width/2-100, 50);
 			graphics.setColor(new Color(0, 255, 0));
 			graphics.fillRect(lavaX+900, screenSize.height-x-200, 100, 100);
 		}
@@ -475,18 +652,35 @@ public void setProgress(){
 		if(missionComplete){
 			graphics.setColor(new Color(200, 0, 200));
 				graphics.fillOval(0, 0, 50, 50);
-				graphics.drawString("Well done, you completed my mission, press continue to progress, or press save to save your work.", 100, 20);
+				graphics.drawString("Well done, you completed my mission, press continue to progress.", 100, 20);
+				missions(graphics, true);
+				graphics.fillRect(screenSize.width/2-50, 50, 100, 100);
+				graphics.drawString("continue", screenSize.width/2-10, 200);
+				graphics.setColor(Color.BLACK);
+				graphics.drawString("mission: " + missions(graphics, false) + "/3", screenSize.width/2-45, 100);
 				graphics.setColor(Color.WHITE);
-				graphics.drawRect(screenSize.width-50, 0, 50, 50);
-				graphics.drawString("save", screenSize.width-50, 25);
+				graphics.drawString("p$" + p$, screenSize.width-50, 25);
+			words = "press the box to continue";
+		}
+		if(settings){
+			graphics.setColor(Color.WHITE);
+			graphics.drawRect(0, 0, 50, 50);
+			graphics.drawString("save", 0, 25);
+			graphics.drawRect(screenSize.width-50, screenSize.height-125, 50, 50);
+			graphics.drawString("quit", screenSize.width-50, screenSize.height-100);
+			graphics.setColor(button);
+			graphics.drawRect(0, screenSize.height-125, 50, 50);
+			graphics.drawString("name", 0, screenSize.height-100);
+			graphics.setColor(buttonTwo);
+			graphics.drawRect(screenSize.width-50, 0, 50, 50);
+			graphics.drawString("opacity", screenSize.width-50, 25);
+			graphics.setColor(Color.WHITE);
+			if(ALPHA){
+				graphics.drawString("use = to increase opacity and minus to decrease", 100, 50);
+			}
 		}
 		graphics.setColor(Color.RED);
 		graphics.drawString("Activity time: " + second + "seconds", 100, 150);
-		if(tunnels == true){
-			graphics.setColor(Color.RED);
-			graphics.drawRect(0, 0, 50, 50);
-			graphics.drawString("save", 0, 25);
-		}
 	}
 	@Override
 	public synchronized void addMouseListener(MouseListener l) {
@@ -515,14 +709,34 @@ public void setProgress(){
 					tunnels = true;
 					selector = false;
 					words = "find the green artifact but beware, orange ground is lava and you will die if you touch it";
-					mouseMove(25, 40);
-					try {
-						setSettings();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
 				}
 			}
+		}
+		if(t.getX() < 50 && t.getY() < 50 && settings == true){
+			try {
+				setSettings();
+			} catch (Exception e) {
+			}
+		} 
+		if(t.getX() > screenSize.width/2-45 && t.getX() < screenSize.width/2-45+100 && start && t.getY() > 85 && t.getY() < 110){
+			start = false;
+			day = true;
+			sky = Color.BLUE;
+			grass = new Color(0, 100, 0);
+		}
+		if(t.getY() < 85 && t.getY() > 60 && start && t.getX() < screenSize.width/2-45+100 && t.getX() > screenSize.width/2-45){
+			setProgress();
+			start = false;
+		}
+		if(t.getX() < 50 && t.getY() > screenSize.height-125 && settings){
+			namer = !namer;
+		}
+		if(t.getY() > screenSize.height-125 && t.getX() > screenSize.width-50 && settings == true){
+			System.out.println("the game successfully closed");
+			System.exit(0);
+		}
+		if(t.getX() > screenSize.width-50 && t.getY() < 50 && settings){
+			ALPHA = !ALPHA;
 		}
 	}
 	@Override
@@ -549,23 +763,33 @@ public void setProgress(){
 			while(true){
 				if(night){
 					pattern = new Pattern("f f f, dw, fw");
+					pattern.setInstrument("PIANO");
+				}
+				if(start){
+					pattern.setInstrument("STEEL_DRUMS");
+				}
+				if(day){
+					pattern.setInstrument("PIANO");
+				}
+				if(slug){
+					pattern = new Pattern("awawaw d d d d d d d dq dh dw dw");
+					pattern.setInstrument("ACOUSTIC_BASS");
+				}
+				if(selector){
+					pattern = new Pattern("awawaw d d d d d d d dq dh dw dw");
+					pattern.setInstrument("ACOUSTIC_BASS");
 				}
 				if(moon){
 					pattern = new Pattern("awawaw d d d d d d d dq dh dw dw");
 					pattern.setInstrument("ACOUSTIC_BASS");
 				}
-				if(slug){
-					if(bangs){
-						bang.setInstrument("GUNSHOT");
-						play.play(bang);
-						bangs = false;
-					}
-				}
 				if(tunnels){
 					pattern = new Pattern("c d cw a ah");
+					pattern.setInstrument("ACOUSTIC_BASS");
 				}
 				if(missionComplete){
 					pattern = new Pattern("e a d g b Ew");
+					pattern.setInstrument("ACOUSTIC_BASS");
 				}
 				player.play(pattern);
 			}	
