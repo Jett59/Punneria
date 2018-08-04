@@ -20,8 +20,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
-public class PunnPoint extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, AccessibleText{ 
-	PunnSet punnset = new PunnSet();	
+public class PunnPoint	 extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, AccessibleText{ 
+	PunnSet punnset = new PunnSet();
 	ImageObserver observer = null;
 	static BufferedImage icon = null;
 	void creatIcon(){
@@ -188,7 +188,7 @@ public void setProgress(){
 	boolean menu = false;
 	String name = ("");
 	static boolean tunnelSave = false;
-	int second = 0;	
+	static int second = 0;	
 	void mouseMove(int X, int Y){
 		Robot robot;
 		try{
@@ -334,11 +334,18 @@ public void setProgress(){
 		PunnPoint punnpoint;
 		try {
 			punnpoint = new PunnPoint();
-			AccessibleContext accessibleContext = punn.getAccessibleContext();
-			accessibleContext.setAccessibleName("this is a test");
-			accessibleContext.setAccessibleDescription("this is a test");
 			punn.getAccessibleContext();
 			punn.getContentPane().add(punnpoint);
+			FlowLayout layout = new FlowLayout();
+			punn.setLayout(layout);
+			JLabel label = new JLabel("test label 1");
+			label.getAccessibleContext().setAccessibleName("quests: " + words);
+			label.setFocusable(true);
+			punn.add(label);
+			JLabel button = new JLabel("test label 2");
+			button.getAccessibleContext().setAccessibleName("activity time: " + second + "seconds");
+			button.setFocusable(true);
+			punn.add(button);			
 			punn.pack();
 			punn.setVisible(true);
 			punn.setIconImage(icon);
@@ -355,6 +362,7 @@ public void setProgress(){
 		addMouseListener	(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
+		
 		setFocusable(true);
 		requestFocusInWindow();
 	}
