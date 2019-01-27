@@ -4,3 +4,7 @@
 .project
 external-libs/
 /.settings/
+
+stats.json
+progress.json
+
