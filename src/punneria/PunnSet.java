@@ -6,6 +6,7 @@ public class PunnSet {
 private Color Triangle;
 private Integer across;
 private String name;
+private long p$;
 public Color getTriangle(){
 	return Triangle;
 }
@@ -23,5 +24,11 @@ public String getName(){
 }
 public void setName(String name){
 	this.name = name;
+}
+public long getP$() {
+	return this.p$;
+}
+public void setP$(long p$) {
+	this.p$ = p$;
 }
 }

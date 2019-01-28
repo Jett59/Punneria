@@ -8,6 +8,9 @@ private Boolean day;
     private Boolean selector;
     private Boolean tunnels;
     private Boolean missionComplete;
+    private boolean tunnel2;
+    private boolean timeZone;
+    private boolean day2;
     private Color sky;
     private Color grass;
 private String words;
@@ -70,5 +73,23 @@ public String getWords(){
     }
 public void setWords(String words){
 	this.words = words;
+}
+public boolean GetTunnel2() {
+	return tunnel2;
+}
+public void setTunnel2(boolean tunnel2) {
+	this.tunnel2 = tunnel2;
+}
+public boolean getTimeZone() {
+	return timeZone;
+}
+public void setTimeZone(boolean timeZone) {
+	this.timeZone = timeZone;
+}
+public boolean getDay2() {
+	return day2;
+}
+public void setDay2(boolean day2) {
+	this.day2 = day2;
 }
 }

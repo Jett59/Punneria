@@ -6,7 +6,6 @@ import org.jfugue.player.Player;
 import javax.accessibility.AccessibleContext;
 import javax.accessibility.AccessibleText;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
 import javax.swing.*;
 import javax.swing.text.AttributeSet;
 
@@ -20,13 +19,23 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
-public class PunnPoint	 extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, AccessibleText{ 
+public class PunnPoint extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, AccessibleText{ 
 	PunnSet punnset = new PunnSet();
+	boolean day2 = false;
+	boolean tunnel2 = false;
+	boolean timeZone = false;
+	boolean isOnPlatform() {
+		if(footy == x/3*5 && lavaX < footx && footx < lavaX+screenSize.width/2-100) {
+			return true;
+		}else {
+			return false;
+		}
+	}
 	ImageObserver observer = null;
 	static BufferedImage icon = null;
 	void creatIcon(){
 	try{
-icon = ImageIO.read(new File("moon.png"));		
+		icon = ImageIO.read(new File("moon.png"));		
 	}catch(Exception e){
 creatIcon();
 	}
@@ -80,7 +89,7 @@ int missions(Graphics graphics, Boolean a){
 		return missions+1;
 	}
 }
-int p$ = 0;
+long p$ = 0;
 	BooleanSaver saver = new BooleanSaver();
 	boolean missionComplete = false;
 	Color button = Color.WHITE;
@@ -96,6 +105,9 @@ int p$ = 0;
 		saver.setSelector(selector);
 		saver.setTunnels(tunnels);
 		saver.setMissionComplete(missionComplete);
+		saver.setTunnel2(tunnel2);
+		saver.setTimeZone(timeZone);
+		saver.setDay2(day2);
 		saver.setGrass(grass);
 		saver.setSky(sky);
 		saver.setWords(words);
@@ -109,6 +121,9 @@ int p$ = 0;
 		selector = saver.getSelector();
 		tunnels = saver.getTunnels();
 		missionComplete = saver.getMissionComplete();
+		tunnel2 = saver.GetTunnel2();
+		timeZone = saver.getTimeZone();
+		day2 = saver.getDay2();
 		grass = saver.getGrass();
 		sky = saver.getSky();
 		words = saver.getWords();
@@ -119,6 +134,7 @@ int p$ = 0;
 			punnset.setTriangle(no);
 			punnset.setAcross(size);
 			punnset.setName(textbox.box);
+			punnset.setP$(p$);
 		String stats = JSON.toJSONString(punnset);
 		Files.write(Paths.get("stats.json"), stats.getBytes());
 		String modes = JSON.toJSONString(saver);
@@ -138,6 +154,7 @@ public void setStats() {
 	if(deSerialised.getName() != null){
 		textbox.box = deSerialised.getName();
 	}
+		p$ = deSerialised.getP$();
 	}catch(Exception e){
 	}
 }
@@ -153,6 +170,9 @@ public void setProgress(){
 		selector = deserialised.getSelector();
 		tunnels = deserialised.getTunnels();
 		missionComplete = deserialised.getMissionComplete();
+		tunnel2 = deserialised.GetTunnel2();
+		timeZone = deserialised.getTimeZone();
+		day2 = deserialised.getDay2();
 		grass = deserialised.getGrass();
 		sky = deserialised.getSky();
 	}catch(Exception e){
@@ -294,14 +314,6 @@ public void setProgress(){
 		});
 		timer.start();
 	}
-	Timer money = new Timer(10000, e ->{
-		if(missionComplete){
-			p$ = p$+missions(getGraphics(), false);
-		}
-	});
-	{
-		money.start();
-	}
 	Timer times = new Timer(100, e ->{
 		if(night){
 			words = "go up to progress, (use the arrow keys to move)";
@@ -316,7 +328,9 @@ public void setProgress(){
 		}
 	}); 
 	Timer time = new Timer(33, e ->{
+		if(day) {
 		sun = sun+1;
+		}
 		if(slug){
 			sky = new Color(sky.getRed()-2, sky.getGreen()-1, 0);
 		}
@@ -356,7 +370,7 @@ public void setProgress(){
 		}
 	}
 	public PunnPoint() throws IOException {
-		setStats();
+		
 		addKeyListener(this);
 		addKeyListener(textbox);
 		addMouseListener	(this);
@@ -371,15 +385,9 @@ public void setProgress(){
 	@Override
 	public void mouseDragged(MouseEvent t){
 		System.out.println("testing");
-		if(tunnels){
-			mouseMove(25, 40);
-		}
 	}
 	@Override
 	public void mouseMoved(MouseEvent t){
-		if(tunnels){
-			mouseMove(25, 40);
-		}
 	}
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent t){
@@ -393,18 +401,35 @@ public void setProgress(){
 	public void keyTyped(KeyEvent t) {
 
 	}
-	void xDown(int num, int speed){
-		x = x+speed;
-		if(x < num){
-    		x = num;
+boolean jumping = false;
+void jump(double g) {
+	jumping = true;
+	new Thread(()->{
+		int initialFootY = footy;
+		int count=0;
+		for(double angle = 0d; angle < 180d; angle+=0.025D) {
+			double angleRadians = Math.toRadians(angle);
+			double sineOfAngle = Math.sin(angleRadians);
+			if(!isOnPlatform() || angle < 1.8D) {
+			footy = initialFootY - (int)(sineOfAngle*(g*50d));
+			}
+			
+			count++;
+			
+			if (count % 4 == 0) {
+				try {
+					Thread.sleep(1);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+			this.repaint();
 		}
-	}
-	void xUp(int num, int speed){
-		x = x+speed;
-		if(x > num){
-			x = num;
-		}
-	}
+		jumping = false;
+	}).start();
+}
 	void lavaLeft(int num, int speed){
 		lavaX = lavaX+speed;
 		if(lavaX < num){
@@ -439,13 +464,7 @@ public void setProgress(){
 				y = y+1;
 			}
 		}
-		if(tunnels){
-			if(t.getKeyCode()==KeyEvent.VK_UP){
-			xDown(100, -3);
-			}
-			if(t.getKeyCode()==KeyEvent.VK_DOWN){
-				xUp(screenSize.height/3, 3);
-			}
+		if(tunnels || tunnel2){
 			if(t.getKeyCode()==KeyEvent.VK_RIGHT){
 				lavaLeft(0, -3);
 			}
@@ -463,6 +482,9 @@ public void setProgress(){
 	}
 	@Override
 	public void keyReleased(KeyEvent t) {
+			if(t.getKeyCode()==KeyEvent.VK_SPACE) {
+				jump(2D);
+			}
 		if(t.getKeyCode()==KeyEvent.VK_ESCAPE){
 			if (settings){
 				settings = false;
@@ -478,6 +500,9 @@ public void setProgress(){
 				selector = false;
 				tunnels = false;
 				missionComplete = false;
+				tunnel2 = false;
+				timeZone = false;
+				day2 = false;
 			}
 		}
 		if(settings){
@@ -605,15 +630,28 @@ public void setProgress(){
 			graphics.drawRect(0, 0, 50, 50);
 			night = false;
 		}
+		if(timeZone) {
+			graphics.setColor(Color.WHITE);
+			graphics.drawRect(screenSize.width-50, 0, 50, 50);
+			graphics.drawString("next", screenSize.width-45, 25);
+			graphics.setColor(Color.BLACK);
+			graphics.drawString("hint: press escape to enter settings and you can save your progress from any point in the game", screenSize.width/2-100, 300);
+		}
 		graphics.setColor(new Color(240, 200, 20));
-		if(day){
+		if(day || day2){
 			graphics.drawImage(image3, screenSize.width/2-63, sun, 126, 126, observer);
+			if(day) {
 			graphics.setColor(Color.BLACK);
 			graphics.drawString("the triangle is you", screenSize.width-200, 100);
 			graphics.drawString("press escape to enter settings", screenSize.width-300, 300);
+			}
+		}
+		if(tunnels || tunnel2) {
+			graphics.setColor(new Color(127, 127, 127));
+			graphics.fillRect(lavaX+20, x/3*5, screenSize.width/2-100, 5);
 		}
 		graphics.setColor(no);
-		graphics.fillPolygon(new int[]{footx,screenSize.width/2+size,screenSize.width/2-size}, new int[]{footy,screenSize.height/2,screenSize.height/2}, 3);
+		graphics.fillPolygon(new int[]{footx,screenSize.width/2+size,screenSize.width/2-size}, new int[]{footy, footy-100, footy-100}, 3);
 		if(settings){
 			sky = new Color(10, 10, 10);
 			grass = new Color(10, 10, 10);
@@ -630,6 +668,9 @@ public void setProgress(){
 			graphics.drawImage(image2, screenSize.width/2-50, 20, 100, 100, observer);
 			y = 20;
 		}
+		if(timeZone) {
+			graphics.setColor(Color.BLUE);
+		}
 		graphics.drawString("Quest: "+ words +"", 100, 100);
 		if(slug){
 			graphics.setColor(new Color(200, 0, 200));
@@ -644,18 +685,26 @@ public void setProgress(){
 			graphics.drawRect(screenSize.width-50, 0, 50, 50);
 			graphics.drawString("next", screenSize.width-45, 25);
 		}
-		if(tunnels){
+		if(tunnels || tunnel2){
 			graphics.setColor(new Color(150, 150, 150));
 			sky = Color.BLACK;
 			grass = new Color(150, 150, 150);
 			graphics.setColor(no);
 			graphics.setColor(orange);
 			graphics.fillRect(lavaX, screenSize.height-x, screenSize.width/2-100, 50);
+			if(tunnels) {
 			graphics.setColor(new Color(0, 255, 0));
+			}else {
+				graphics.setColor(new Color(200, 0, 200));
+			}
 			graphics.fillRect(lavaX+900, screenSize.height-x-200, 100, 100);
 		}
 		if(lavaX < 1){
+			if(tunnels) {
 			missionComplete = true;tunnels = false; x = screenSize.height/3; lavaX = screenSize.width/2+size;
+			}else {
+				missionComplete = true;tunnel2 = false; x = screenSize.height/3; lavaX = screenSize.width/2+size; missions += 1; p$ += 1000000000;
+			}
 		}
 		if(missionComplete){
 			graphics.setColor(new Color(200, 0, 200));
@@ -667,8 +716,15 @@ public void setProgress(){
 				graphics.setColor(Color.BLACK);
 				graphics.drawString("mission: " + missions(graphics, false) + "/3", screenSize.width/2-45, 100);
 				graphics.setColor(Color.WHITE);
-				graphics.drawString("p$" + p$, screenSize.width-50, 25);
+				graphics.drawString("p$" + p$, screenSize.width-200, 25);
+				if(missions == 1) {
 			words = "press the box to continue";
+				}else if(missions == 2) {
+					words = "Press the box to enter the time portal";
+				}
+		}
+		if(tunnel2) {
+			words = "find the purple time portal...";
 		}
 		if(settings){
 			graphics.setColor(Color.WHITE);
@@ -734,6 +790,7 @@ public void setProgress(){
 		}
 		if(t.getY() < 85 && t.getY() > 60 && start && t.getX() < screenSize.width/2-45+100 && t.getX() > screenSize.width/2-45){
 			setProgress();
+			setStats();
 			start = false;
 		}
 		if(t.getX() < 50 && t.getY() > screenSize.height-125 && settings){
@@ -746,6 +803,26 @@ public void setProgress(){
 		if(t.getX() > screenSize.width-50 && t.getY() < 50 && settings){
 			ALPHA = !ALPHA;
 		}
+	if(missionComplete && t.getY() > 50 && t.getY() < 150 && t.getX() > screenSize.width/2-50 && t.getX() < screenSize.width+50) {
+	if(missions == 0) {
+		missionComplete = false;
+		tunnel2 = true;
+		sky = Color.BLACK;
+	}else if(missions == 1) {
+		sun = 20;
+		missionComplete = false;
+		timeZone = true;
+		words = "press next to travel to the earth, before it exploded... It exploded because it was so frustrated that you flew away from it.";
+		sky = new Color(200, 0, 200);
+		grass = new Color(200, 0, 200);
+	}
+	}
+	if(timeZone && t.getY() < 50 && t.getX() > screenSize.width-50) {
+		day2 = true;
+		timeZone = false;
+		sky = Color.BLUE;
+		grass = new Color(0, 100, 0);
+	}
 	}
 	@Override
 	public void mouseEntered(MouseEvent t) {
@@ -769,6 +846,10 @@ public void setProgress(){
 
 		new Thread(()->{
 			while(true){
+				if(timeZone) {
+					pattern.setInstrument("PIANO");
+					pattern = new Pattern("cw, ch, ch, cw, cw");
+				}
 				if(night){
 					pattern = new Pattern("f f f, dw, fw");
 					pattern.setInstrument("PIANO");
@@ -776,8 +857,9 @@ public void setProgress(){
 				if(start){
 					pattern.setInstrument("STEEL_DRUMS");
 				}
-				if(day){
+				if(day || day2){
 					pattern.setInstrument("PIANO");
+					pattern = new Pattern("a c a c a f a d a a a b aw");
 				}
 				if(slug){
 					pattern = new Pattern("awawaw d d d d d d d dq dh dw dw");
@@ -791,7 +873,7 @@ public void setProgress(){
 					pattern = new Pattern("awawaw d d d d d d d dq dh dw dw");
 					pattern.setInstrument("ACOUSTIC_BASS");
 				}
-				if(tunnels){
+				if(tunnels || tunnel2){
 					pattern = new Pattern("c d cw a ah");
 					pattern.setInstrument("ACOUSTIC_BASS");
 				}
@@ -801,6 +883,23 @@ public void setProgress(){
 				}
 				player.play(pattern);
 			}	
-		}).start();
-	}
+	}).start();
+	new Thread(()->{
+		int count = 0;
+		while(true) {
+			if(!jumping && !isOnPlatform() && footy != screenSize.height-x) {
+				footy += 1;
+				count += 1;
+				if(count > 1) {
+					try {
+						Thread.sleep(20);
+						count = 0;
+					}catch(Exception e) {
+						
+					}
+				}
+			}
+		}
+	}).start();
 }
+	}
