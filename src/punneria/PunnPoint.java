@@ -227,7 +227,7 @@ public void setProgress(){
 	static boolean selector = false;
 	static boolean night = false;
 	boolean moon = false;
-	public static String words   = new String("press space to start");
+	public static String words   = new String("press s to start");
 	Player player = new Player();
 	int acl = 0;
 	boolean slug = false;
@@ -402,6 +402,7 @@ public void setProgress(){
 
 	}
 boolean jumping = false;
+boolean falling = false;
 void jump(double g) {
 	jumping = true;
 	new Thread(()->{
@@ -482,7 +483,7 @@ void jump(double g) {
 	}
 	@Override
 	public void keyReleased(KeyEvent t) {
-			if(t.getKeyCode()==KeyEvent.VK_SPACE) {
+			if(t.getKeyCode()==KeyEvent.VK_SPACE && !jumping) {
 				jump(2D);
 			}
 		if(t.getKeyCode()==KeyEvent.VK_ESCAPE){
@@ -523,7 +524,7 @@ void jump(double g) {
 				ALPHA = !ALPHA;
 			}
 		}
-		if(t.getKeyCode ()==KeyEvent.VK_SPACE && day){
+		if(t.getKeyCode ()==KeyEvent.VK_S && day){
 			time.start();
 		}
 		if(moon){
