@@ -28,7 +28,7 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 	boolean tunnel2 = false;
 	boolean timeZone = false;
 	boolean isOnPlatform() {
-		if(footy == x/3*5 && lavaX < footx && footx < lavaX+screenSize.width/2-100+20 && (tunnels || tunnel2)) {
+		if(footy == x/3*5 && lavaX+20 < footx && footx < lavaX+screenSize.width/2-100+20 && (tunnels || tunnel2)) {
 			return true;
 		}else {
 			return false;
