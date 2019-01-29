@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 public class PunnPoint extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, AccessibleText{ 
 	PunnSet punnset = new PunnSet();
 	Sound sound = new Sound();
@@ -910,22 +911,24 @@ void jump(double g) {
 				player.play(pattern);
 			}	
 	}).start();
-	new Thread(()->{
-		int count = 0;
-		while(true) {
+	
+		final AtomicInteger count = new AtomicInteger();
+		Timer fall = new Timer(10, e ->{
 			if(!jumping && !isOnPlatform() && footy != screenSize.height-x) {
 				footy += 1;
-				count += 1;
-				if(count > 1) {
+				count.set(count.get()+1);;
+				if(count.get() > 1) {
 					try {
 						Thread.sleep(20);
-						count = 0;
-					}catch(Exception e) {
+						count.set(0);
+					}catch(Exception e5) {
 						
 					}
 				}
 			}
-		}
-	}).start();
+	});
+		{
+			fall.start();
 }
 	}
+}
