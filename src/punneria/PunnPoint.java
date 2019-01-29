@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Random;
 public class PunnPoint extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, AccessibleText{ 
 	PunnSet punnset = new PunnSet();
+	Sound sound = new Sound();
+	boolean intro = false;
 	boolean day2 = false;
 	boolean tunnel2 = false;
 	boolean timeZone = false;
@@ -411,7 +413,7 @@ void jump(double g) {
 		for(double angle = 0d; angle < 180d; angle+=0.025D) {
 			double angleRadians = Math.toRadians(angle);
 			double sineOfAngle = Math.sin(angleRadians);
-			if(!isOnPlatform() || angle < 1.8D) {
+			if((!isOnPlatform() || angle < 1.8D) && !namer) {
 			footy = initialFootY - (int)(sineOfAngle*(g*50d));
 			}
 			
@@ -638,6 +640,11 @@ void jump(double g) {
 			graphics.setColor(Color.BLACK);
 			graphics.drawString("hint: press escape to enter settings and you can save your progress from any point in the game", screenSize.width/2-100, 300);
 		}
+		if(intro) {
+			graphics.setColor(Color.WHITE);
+			graphics.drawRect(screenSize.width/2-100, 0, 200, 50);
+			graphics.drawString("continue", screenSize.width/2-10, 25);
+		}
 		graphics.setColor(new Color(240, 200, 20));
 		if(day || day2){
 			graphics.drawImage(image3, screenSize.width/2-63, sun, 126, 126, observer);
@@ -785,9 +792,11 @@ void jump(double g) {
 		} 
 		if(t.getX() > screenSize.width/2-45 && t.getX() < screenSize.width/2-45+100 && start && t.getY() > 85 && t.getY() < 110){
 			start = false;
-			day = true;
-			sky = Color.BLUE;
-			grass = new Color(0, 100, 0);
+			intro = true;
+			sky = Color.BLACK;
+			grass = Color.BLACK;
+			sound.setClipFile(new File("storyLine1.aif"));
+			sound.play();
 		}
 		if(t.getY() < 85 && t.getY() > 60 && start && t.getX() < screenSize.width/2-45+100 && t.getX() > screenSize.width/2-45){
 			setProgress();
@@ -824,6 +833,19 @@ void jump(double g) {
 		sky = Color.BLUE;
 		grass = new Color(0, 100, 0);
 	}
+	if(t.getX() > screenSize.width/2-100 && t.getX() < screenSize.width/2+100 && intro && t.getY() < 50) {
+		if(!namer) {
+			namer = true;
+			sound.setClipFile(new File("namer.aif"));
+			sound.play();
+		}else {
+			day = true;
+			intro = false;
+			namer = false;
+			sky = Color.BLUE;
+			grass = new Color(0, 100, 0);
+		}
+	}
 	}
 	@Override
 	public void mouseEntered(MouseEvent t) {
@@ -847,6 +869,9 @@ void jump(double g) {
 
 		new Thread(()->{
 			while(true){
+				if(intro) {
+					pattern = new Pattern("");
+				}
 				if(timeZone) {
 					pattern.setInstrument("PIANO");
 					pattern = new Pattern("cw, ch, ch, cw, cw");
