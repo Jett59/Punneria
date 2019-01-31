@@ -19,16 +19,25 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 public class PunnPoint extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, AccessibleText{ 
 	PunnSet punnset = new PunnSet();
+	Float acceleration = 0F;
 	Sound sound = new Sound();
+	Float moonsG = 6F;
 	boolean intro = false;
 	boolean day2 = false;
 	boolean tunnel2 = false;
 	boolean timeZone = false;
 	boolean isOnPlatform() {
-		if(footy == x/3*5 && lavaX+20 < footx && footx < lavaX+screenSize.width/2-100+20 && (tunnels || tunnel2)) {
+		System.out.println("called isonplatform");
+		if(footy > x/3*5-1 && lavaX+20 < footx && footx < lavaX+screenSize.width/2-100+20 && (tunnels || tunnel2)) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+	boolean isOnMoon() {
+		if(moon || slug || selector || tunnels || missionComplete || tunnel2 || timeZone) {
 			return true;
 		}else {
 			return false;
@@ -271,6 +280,11 @@ public void setProgress(){
 		javax.swing.Timer timer = new Timer(10, e -> {
 			this.repaint();
 			textbox.allowed = namer;
+			if(isOnMoon()) {
+				moonsG = 1F;
+			}else {
+				moonsG = 6F;
+			}
 			if(start){
 				settings = false;
 			}
@@ -404,35 +418,8 @@ public void setProgress(){
 	public void keyTyped(KeyEvent t) {
 
 	}
-boolean jumping = false;
-boolean falling = false;
 void jump(double g) {
-	jumping = true;
-	new Thread(()->{
-		int initialFootY = footy;
-		int count=0;
-		for(double angle = 0d; angle < 180d; angle+=0.025D) {
-			double angleRadians = Math.toRadians(angle);
-			double sineOfAngle = Math.sin(angleRadians);
-			if((!isOnPlatform() || angle < 1.8D) && !namer) {
-			footy = initialFootY - (int)(sineOfAngle*(g*50d));
-			}
-			
-			count++;
-			
-			if (count % 4 == 0) {
-				try {
-					Thread.sleep(1);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			
-			this.repaint();
-		}
-		jumping = false;
-	}).start();
+			acceleration = 1.5F;
 }
 	void lavaLeft(int num, int speed){
 		lavaX = lavaX+speed;
@@ -486,7 +473,7 @@ void jump(double g) {
 	}
 	@Override
 	public void keyReleased(KeyEvent t) {
-			if(t.getKeyCode()==KeyEvent.VK_SPACE && !jumping) {
+			if(t.getKeyCode()==KeyEvent.VK_SPACE && (isOnPlatform() || footy == screenSize.height-x)) {
 				jump(2D);
 			}
 		if(t.getKeyCode()==KeyEvent.VK_ESCAPE){
@@ -861,12 +848,10 @@ void jump(double g) {
 
 	}
 	{		
-		new Thread(()->{
 			Timer count = new Timer(1000, e ->{
 				second = second+1;
 			});
 			count.start();
-		}).start();
 
 		new Thread(()->{
 			while(true){
@@ -911,24 +896,28 @@ void jump(double g) {
 				player.play(pattern);
 			}	
 	}).start();
-	
-		final AtomicInteger count = new AtomicInteger();
 		Timer fall = new Timer(10, e ->{
-			if(!jumping && !isOnPlatform() && footy != screenSize.height-x) {
-				footy += 1;
-				count.set(count.get()+1);;
-				if(count.get() > 1) {
-					try {
-						Thread.sleep(20);
-						count.set(0);
-					}catch(Exception e5) {
-						
-					}
-				}
+			int groundY = screenSize.height-x;
+			footy -= acceleration;
+			if(isOnPlatform()) {
+			groundY = x/3*5;
 			}
+			if(footy > screenSize.height-x) {
+				groundY = screenSize.height-x;
+			}
+			if(night) {
+				acceleration = 0f;
+				groundY = screenSize.height-(screenSize.height/3);
+			}
+				if(footy > groundY) {
+					System.out.println("reset acceleration to 0");	
+					footy = groundY;
+				}else {
+					acceleration -= moonsG/100F;
+				}
 	});
 		{
 			fall.start();
-}
+	}
 	}
 }
