@@ -271,7 +271,7 @@ public void setProgress(){
 	Polygon poly = new Polygon(new int[]{screenSize.width/2,screenSize.width/2-10,screenSize.width/2+10}, new int[]{screenSize.height/2-10, screenSize.height/2-20, screenSize.height/2+10}, 3);
 	int footx = screenSize.width/2;
 	int x = screenSize.height/3;
-	int footy = screenSize.height-x;
+	Float footy = (float) (screenSize.height-x);
 	int lavaX = screenSize.width/2+size;
 	int y = 20;
 	static Color sky = new Color(0, 0, 255);
@@ -647,7 +647,7 @@ void jump(double g) {
 			graphics.fillRect(lavaX+20, x/3*5, screenSize.width/2-100, 5);
 		}
 		graphics.setColor(no);
-		graphics.fillPolygon(new int[]{footx,screenSize.width/2+size,screenSize.width/2-size}, new int[]{footy, footy-100, footy-100}, 3);
+		graphics.fillPolygon(new int[]{footx,screenSize.width/2+size,screenSize.width/2-size}, new int[]{footy.intValue(), (int) (footy-100), (int) (footy-100)}, 3);
 		if(settings){
 			sky = new Color(10, 10, 10);
 			grass = new Color(10, 10, 10);
@@ -911,7 +911,7 @@ void jump(double g) {
 			}
 				if(footy > groundY) {
 					System.out.println("reset acceleration to 0");	
-					footy = groundY;
+					footy = (float) groundY;
 				}else {
 					acceleration -= moonsG/100F;
 				}
