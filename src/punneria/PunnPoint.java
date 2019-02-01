@@ -29,8 +29,7 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 	boolean tunnel2 = false;
 	boolean timeZone = false;
 	boolean isOnPlatform() {
-		System.out.println("called isonplatform");
-		if(footy > x/3*5-1 && lavaX+20 < footx && footx < lavaX+screenSize.width/2-100+20 && (tunnels || tunnel2)) {
+		if(footy > x/3*5-1 && footy < x/3*5+5 && lavaX+20 < footx && footx < lavaX+screenSize.width/2-100+20 && (tunnels || tunnel2)) {
 			return true;
 		}else {
 			return false;
@@ -647,7 +646,7 @@ void jump(double g) {
 			graphics.fillRect(lavaX+20, x/3*5, screenSize.width/2-100, 5);
 		}
 		graphics.setColor(no);
-		graphics.fillPolygon(new int[]{footx,screenSize.width/2+size,screenSize.width/2-size}, new int[]{footy.intValue(), (int) (footy-100), (int) (footy-100)}, 3);
+		graphics.fillPolygon(new int[]{footx, screenSize.width/2+size, screenSize.width/2-size}, new int[]{footy.intValue(), (int) (footy-100), (int) (footy-100)}, 3);
 		if(settings){
 			sky = new Color(10, 10, 10);
 			grass = new Color(10, 10, 10);
@@ -910,7 +909,6 @@ void jump(double g) {
 				groundY = screenSize.height-(screenSize.height/3);
 			}
 				if(footy > groundY) {
-					System.out.println("reset acceleration to 0");	
 					footy = (float) groundY;
 				}else {
 					acceleration -= moonsG/100F;
