@@ -21,9 +21,12 @@ import java.util.List;
 import java.util.Random;
 public class PunnPoint extends JPanel implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, AccessibleText{ 
 	PunnSet punnset = new PunnSet();
+	float BlackOpacity = 1F;
 	Float acceleration = 0F;
 	Sound sound = new Sound();
+	Fader fader = new Fader();
 	Float moonsG = 6F;
+	boolean isFadingToSelector = false;
 	boolean intro = false;
 	boolean day2 = false;
 	boolean tunnel2 = false;
@@ -42,6 +45,8 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 			return false;
 		}
 	}
+	boolean fade = false;
+		
 	ImageObserver observer = null;
 	static BufferedImage icon = null;
 	void creatIcon(){
@@ -279,6 +284,13 @@ public void setProgress(){
 		javax.swing.Timer timer = new Timer(10, e -> {
 			this.repaint();
 			textbox.allowed = namer;
+			if(isFadingToSelector && fader.isAtHeight()) {
+				selector = true;
+				sky = Color.WHITE;
+				words = "";
+				grass = Color.WHITE;
+				slug = false;
+			}
 			if(isOnMoon()) {
 				moonsG = 1F;
 			}else {
@@ -740,6 +752,7 @@ void jump(double g) {
 		}
 		graphics.setColor(Color.RED);
 		graphics.drawString("Activity time: " + second + "seconds", 100, 150);
+		fader.paint(graphics, screenSize.width, screenSize.height);
 	}
 	@Override
 	public synchronized void addMouseListener(MouseListener l) {
@@ -754,11 +767,9 @@ void jump(double g) {
 		if(t.getX() < 50){
 			if(t.getY() < 50){
 				if(slug){
-					selector = true;
-					sky = Color.WHITE;
-					words = "";
-					grass = Color.WHITE;
-					slug = false;
+fade = true;
+fader.fade();
+					isFadingToSelector = true;
 				}
 			}
 		}
@@ -905,7 +916,6 @@ void jump(double g) {
 				groundY = screenSize.height-x;
 			}
 			if(night) {
-				acceleration = 0f;
 				groundY = screenSize.height-(screenSize.height/3);
 			}
 				if(footy > groundY) {
