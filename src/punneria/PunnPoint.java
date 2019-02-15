@@ -27,6 +27,8 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 	Fader fader = new Fader();
 	Float moonsG = 6F;
 	boolean isFadingToSelector = false;
+	boolean isFadingFromMission = false;
+	boolean isFadingFromSelector = false;
 	boolean intro = false;
 	boolean day2 = false;
 	boolean tunnel2 = false;
@@ -90,19 +92,19 @@ int missions(Graphics graphics, Boolean a){
 	if(a){
 	if(missions == 1){
 		graphics.setColor(Color.BLUE);
-		return 2;
+		return 1;
 	}else if(missions == 2){
 		graphics.setColor(Color.GREEN);
-		return 3;
+		return 2;
 	}else if(missions == 3){
 		graphics.setColor(Color.RED);
-		return 4;
+		return 3;
 	}else{
 		graphics.setColor(Color.WHITE);
-		return missions+1;
+		return missions;
 	}
 	}else{
-		return missions+1;
+		return missions;
 	}
 }
 long p$ = 0;
@@ -151,6 +153,7 @@ long p$ = 0;
 			punnset.setAcross(size);
 			punnset.setName(textbox.box);
 			punnset.setP$(p$);
+			punnset.setMissions(missions);
 		String stats = JSON.toJSONString(punnset);
 		Files.write(Paths.get("stats.json"), stats.getBytes());
 		String modes = JSON.toJSONString(saver);
@@ -161,16 +164,11 @@ public void setStats() {
 	byte[] bytes = Files.readAllBytes(Paths.get("stats.json"));
 	String stats = new String(bytes);
 	PunnSet deSerialised = JSON.parseObject(stats, PunnSet.class);
-	if(deSerialised.getTriangle ()!= null){
 	no = deSerialised.getTriangle();
-	}
-	if (deSerialised.getAcross()!=null){
 		size = deSerialised.getAcross();
-	}
-	if(deSerialised.getName() != null){
 		textbox.box = deSerialised.getName();
-	}
 		p$ = deSerialised.getP$();
+		missions = deSerialised.getMissions();
 	}catch(Exception e){
 	}
 }
@@ -284,12 +282,23 @@ public void setProgress(){
 		javax.swing.Timer timer = new Timer(10, e -> {
 			this.repaint();
 			textbox.allowed = namer;
-			if(isFadingToSelector && fader.isAtHeight()) {
+			if(fader.isAtHeight()) {
+			if(isFadingToSelector) {
+				isFadingToSelector = false;
 				selector = true;
 				sky = Color.WHITE;
 				words = "";
 				grass = Color.WHITE;
 				slug = false;
+			}else if(isFadingFromSelector) {
+				isFadingFromSelector = false;
+				tunnels = true;
+				selector = false;
+				words = "find the green artifact but beware, orange ground is lava and you will die if you touch it";
+			}else if(isFadingFromMission) {
+				isFadingFromMission = false;
+				missionComplete = true; tunnel2 = false; tunnels = false; x = screenSize.height/3; lavaX = screenSize.width/2+size; missions += 1; p$ += 1000000000;
+			}
 			}
 			if(isOnMoon()) {
 				moonsG = 1F;
@@ -696,7 +705,6 @@ void jump(double g) {
 			graphics.setColor(new Color(150, 150, 150));
 			sky = Color.BLACK;
 			grass = new Color(150, 150, 150);
-			graphics.setColor(no);
 			graphics.setColor(orange);
 			graphics.fillRect(lavaX, screenSize.height-x, screenSize.width/2-100, 50);
 			if(tunnels) {
@@ -708,9 +716,11 @@ void jump(double g) {
 		}
 		if(lavaX < 1){
 			if(tunnels) {
-			missionComplete = true;tunnels = false; x = screenSize.height/3; lavaX = screenSize.width/2+size;
+				fader.fade();
+				isFadingFromMission = true;
 			}else {
-				missionComplete = true;tunnel2 = false; x = screenSize.height/3; lavaX = screenSize.width/2+size; missions += 1; p$ += 1000000000;
+				fader.fade();
+				isFadingFromMission = true;
 			}
 		}
 		if(missionComplete){
@@ -776,9 +786,8 @@ fader.fade();
 		if(selector){
 			if(t.getX()>screenSize.width-50){
 				if(t.getY()<50){
-					tunnels = true;
-					selector = false;
-					words = "find the green artifact but beware, orange ground is lava and you will die if you touch it";
+					isFadingFromSelector = true;
+					fader.fade();
 				}
 			}
 		}
@@ -812,11 +821,11 @@ fader.fade();
 			ALPHA = !ALPHA;
 		}
 	if(missionComplete && t.getY() > 50 && t.getY() < 150 && t.getX() > screenSize.width/2-50 && t.getX() < screenSize.width+50) {
-	if(missions == 0) {
+	if(missions == 1) {
 		missionComplete = false;
 		tunnel2 = true;
 		sky = Color.BLACK;
-	}else if(missions == 1) {
+	}else if(missions == 2) {
 		sun = 20;
 		missionComplete = false;
 		timeZone = true;

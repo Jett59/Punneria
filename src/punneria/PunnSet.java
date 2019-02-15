@@ -7,6 +7,7 @@ private Color Triangle;
 private Integer across;
 private String name;
 private long p$;
+private Integer missions;
 public Color getTriangle(){
 	return Triangle;
 }
@@ -30,5 +31,11 @@ public long getP$() {
 }
 public void setP$(long p$) {
 	this.p$ = p$;
+}
+public Integer getMissions() {
+	return missions;
+}
+public void setMissions(Integer missions) {
+	this.missions = missions;
 }
 }
