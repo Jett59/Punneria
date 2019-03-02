@@ -371,6 +371,9 @@ public void setProgress(){
 			if(slug){
 				if(co > 3) {
 				sky = new Color(sky.getRed()-2, sky.getGreen()-1, 0);
+				if(sky.getGreen() < 5) {
+					sky = new Color(4, 4, 4);
+				}
 				co = 0;
 				}
 				co += 1;
