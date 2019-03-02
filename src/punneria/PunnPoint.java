@@ -25,6 +25,7 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 	Float acceleration = 0F;
 	Sound sound = new Sound();
 	Fader fader = new Fader();
+	boolean isLaunching = false;
 	Float moonsG = 6F;
 	boolean isFadingToSelector = false;
 	boolean isFadingFromMission = false;
@@ -33,6 +34,9 @@ public class PunnPoint extends JPanel implements KeyListener, MouseListener, Mou
 	boolean day2 = false;
 	boolean tunnel2 = false;
 	boolean timeZone = false;
+	boolean fly = false;
+	boolean lavaLeft = false;
+	boolean lavaRight = false;
 	boolean isOnPlatform() {
 		if(footy > x/3*5-1 && footy < x/3*5+5 && lavaX+20 < footx && footx < lavaX+screenSize.width/2-100+20 && (tunnels || tunnel2)) {
 			return true;
@@ -278,10 +282,19 @@ public void setProgress(){
 	int y = 20;
 	static Color sky = new Color(0, 0, 255);
 	static Color grass = new Color(0, 100, 0);
+	int co = 0;
 	{
 		javax.swing.Timer timer = new Timer(10, e -> {
 			this.repaint();
 			textbox.allowed = namer;
+			if(fly && !isLaunching) {
+				if(night) {
+				x -= 1;
+				y += 1;
+				}else {
+					fly = false;
+				}
+			}
 			if(fader.isAtHeight()) {
 			if(isFadingToSelector) {
 				isFadingToSelector = false;
@@ -295,9 +308,15 @@ public void setProgress(){
 				tunnels = true;
 				selector = false;
 				words = "find the green artifact but beware, orange ground is lava and you will die if you touch it";
-			}else if(isFadingFromMission) {
+			}else if(isFadingFromMission && !missionComplete) {
 				isFadingFromMission = false;
-				missionComplete = true; tunnel2 = false; tunnels = false; x = screenSize.height/3; lavaX = screenSize.width/2+size; missions += 1; p$ += 1000000000;
+				missionComplete = true; 
+				tunnel2 = false; 
+				tunnels = false; 
+				x = screenSize.height/3; 
+				missions += 1; 
+				p$ += 1000000000;
+				lavaX = 1;
 			}
 			}
 			if(isOnMoon()) {
@@ -322,6 +341,7 @@ public void setProgress(){
 				grass = new Color(150, 150, 150);
 			}
 			if(lavaX < footx+1 && screenSize.height-x == footy && footx < lavaX+screenSize.width/2-100){
+				System.out.println(footx + ", " + lavaX);
 				System.exit(0);
 			}
 			if(textbox.box == "call" && moon == true){
@@ -348,12 +368,19 @@ public void setProgress(){
 			if(slug){
 				words = "press the completely normal purple ball to reach the completely open secret underground caves.";
 			}
+			if(slug){
+				if(co > 3) {
+				sky = new Color(sky.getRed()-2, sky.getGreen()-1, 0);
+				co = 0;
+				}
+				co += 1;
+			}
 		});
 		timer.start();
 	}
 	Timer times = new Timer(100, e ->{
 		if(night){
-			words = "go up to progress, (use the arrow keys to move)";
+			words = "press space to start ignition";
 		}
 		if(day){
 		sky = new Color(0, 0, Math.max(sky.getBlue()-3, 0));
@@ -363,17 +390,20 @@ public void setProgress(){
 		if(sky.getBlue()<6 && day){
 			night = true;
 		}
-	}); 
+	});
+	Timer timer2 = new Timer(15, e->{
+		if(sun > screenSize.height-x-200){
+			times.start();
+		} 
+	});
+	{
+	timer2.start();
+	}
 	Timer time = new Timer(33, e ->{
 		if(day) {
 		sun = sun+1;
 		}
-		if(slug){
-			sky = new Color(sky.getRed()-2, sky.getGreen()-1, 0);
-		}
-		if(sun > screenSize.height-x-200){
-			times.start();
-		} 
+		
 	});
 	@Override
 	public synchronized void addMouseMotionListener(MouseMotionListener l) {
@@ -438,11 +468,11 @@ public void setProgress(){
 	public void keyTyped(KeyEvent t) {
 
 	}
-void jump(double g) {
-			acceleration = 1.5F;
+void jump() {
+			acceleration = 2F;
 }
 	void lavaLeft(int num, int speed){
-		lavaX = lavaX+speed;
+		lavaX = lavaX-speed;
 		if(lavaX < num){
 			lavaX = num;
 		}
@@ -455,6 +485,14 @@ void jump(double g) {
 	}
 	@Override
 	public void keyPressed(KeyEvent t) {
+		if(!isFadingFromMission) {
+		if(lavaLeft) {
+			lavaRight(screenSize.width, 3);
+		}
+		if(lavaRight) {
+			lavaLeft(0, 3);
+		}
+		}
 		if(selector){
 			if(t.getKeyCode()==KeyEvent.VK_MINUS){
 				size = size-1;
@@ -476,11 +514,13 @@ void jump(double g) {
 			}
 		}
 		if(tunnels || tunnel2){
-			if(t.getKeyCode()==KeyEvent.VK_RIGHT){
-				lavaLeft(0, -3);
-			}
 			if(t.getKeyCode()==KeyEvent.VK_LEFT){
-				lavaRight(screenSize.width/2+100, 3);
+				lavaLeft = true;
+				lavaRight = false;
+			}
+			if(t.getKeyCode()==KeyEvent.VK_RIGHT){
+				lavaRight = true;
+				lavaLeft = false;
 			}
 		}
 		if(ALPHA && settings){
@@ -493,8 +533,20 @@ void jump(double g) {
 	}
 	@Override
 	public void keyReleased(KeyEvent t) {
+		if(t.getKeyCode()==KeyEvent.VK_LEFT) {
+			lavaLeft = false;
+		}
+		if(t.getKeyCode()==KeyEvent.VK_RIGHT && tunnels) {
+			lavaRight = false;
+		}
 			if(t.getKeyCode()==KeyEvent.VK_SPACE && (isOnPlatform() || footy == screenSize.height-x)) {
-				jump(2D);
+				if(!night) {
+				jump();
+				}else if(!fly) {
+					fly = true;
+				isLaunching = true;
+					isLaunching = !soundEffects.playLaunch();
+				}
 			}
 		if(t.getKeyCode()==KeyEvent.VK_ESCAPE){
 			if (settings){
@@ -568,6 +620,9 @@ void jump(double g) {
 			if(t.getKeyCode()==KeyEvent.VK_R){
 				no = Color.RED;
 			}
+			if(t.getKeyCode()==KeyEvent.VK_Y) {
+				no = new Color(255, 255, 0);
+			}
 		}
 	}
 	@Override
@@ -614,6 +669,7 @@ void jump(double g) {
 	public int getSelectionStart() {
 		return 0;
 	}
+	int xCopy;
 	@Override
 	protected void paintComponent(Graphics graphics){
 		super.paintComponent(graphics);
@@ -679,6 +735,12 @@ void jump(double g) {
 			graphics.drawImage(icon, screenSize.width/2-63, y, 126, 126, observer);
 			drawStar(graphics, screenSize.width-100, 50);
 			drawStar(graphics, screenSize.width/2+100, 50);
+			xCopy = screenSize.height/3;
+			int ground = screenSize.height-xCopy;
+			graphics.setColor(new Color(255, 200, 0, 100));
+			graphics.fillRect(screenSize.width/2-(size+10), ground-250, size*2+20, 250);
+			graphics.fillPolygon(new int[] {screenSize.width/2, screenSize.width/2-(size+10), screenSize.width/2+(size+10)}, new int[] {ground-600, ground-250, ground-250}, 3);
+			//footy = (float)screenSize.height/2;
 		}
 		if(moon){
 			graphics.drawImage(image2, screenSize.width/2-50, 20, 100, 100, observer);
@@ -697,7 +759,7 @@ void jump(double g) {
 		}
 		if(selector){
 			graphics.setColor(Color.BLACK);
-			graphics.drawString("press R to select Red, B to select Blue, G to select Green, equals to increase size, minus to shrink, p to randomize size, c to randomize color", 100, 100);
+			graphics.drawString("press R to select Red, B to select Blue, G to select Green, y to select yellow, equals to increase size, minus to shrink, p to randomize size, c to randomize color", 100, 100);
 			graphics.drawRect(screenSize.width-50, 0, 50, 50);
 			graphics.drawString("next", screenSize.width-45, 25);
 		}
@@ -715,10 +777,7 @@ void jump(double g) {
 			graphics.fillRect(lavaX+900, screenSize.height-x-200, 100, 100);
 		}
 		if(lavaX < 1){
-			if(tunnels) {
-				fader.fade();
-				isFadingFromMission = true;
-			}else {
+			if(tunnels || tunnel2) {
 				fader.fade();
 				isFadingFromMission = true;
 			}
@@ -824,6 +883,7 @@ fader.fade();
 	if(missions == 1) {
 		missionComplete = false;
 		tunnel2 = true;
+		lavaX = screenSize.width/2+size; 
 		sky = Color.BLACK;
 	}else if(missions == 2) {
 		sun = 20;
@@ -912,7 +972,9 @@ fader.fade();
 					pattern = new Pattern("e a d g b Ew");
 					pattern.setInstrument("ACOUSTIC_BASS");
 				}
+				if(!isLaunching) {
 				player.play(pattern);
+				}
 			}	
 	}).start();
 		Timer fall = new Timer(10, e ->{
